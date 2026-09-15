@@ -1,0 +1,81 @@
+MARKET SIGNAL — TEAMMATE INSTALLATION GUIDE (WINDOWS)
+=====================================================
+
+REQUIREMENTS
+- Windows 10 or 11
+- Python 3.11: https://www.python.org/downloads/
+- Google Chrome: https://www.google.com/chrome/
+- Internet access
+- API key for the configured AI provider
+
+Chrome DevTools MCP and Node.js are NOT required. Market Signal automates installed Google Chrome directly through Playwright. It creates an isolated project profile at data\chrome-profile and never uses your personal Chrome profile, history, login, cookies, or saved passwords.
+
+FIRST INSTALLATION
+1. Copy the complete Prototype folder.
+2. Install Python 3.11 and select “Add Python to PATH”.
+3. Install Google Chrome.
+4. Double-click setup_windows.bat.
+5. Open .env with Notepad and set:
+
+   NAVY_API_KEY=your-key-here
+   NAVY_BASE_URL=https://api.navy/v1
+   NAVY_MODEL=gpt-5.6-luna
+
+6. Save .env. Never share or commit this file.
+
+START
+1. Double-click run_windows.bat.
+2. Open http://localhost:8501 if it does not open automatically.
+3. Keep the command window open.
+4. Press Ctrl+C in that window to stop the application.
+
+ANALYSIS WORKFLOW
+1. Open Run analysis.
+2. Select one bank.
+3. Review its starting URLs.
+4. Set Maximum pages to explore. This is a ceiling; fewer pages are collected if no further relevant, allowed links are found.
+5. Keep visual analysis enabled for layout, color, imagery, CTA and journey analysis.
+6. Run each bank independently.
+7. Review detailed output under Bank profiles.
+8. Build the final comparison only after all required bank profiles are current.
+
+BROWSER BEHAVIOR
+- Installed Google Chrome runs headlessly.
+- Cookies and CDN clearance persist only in data\chrome-profile.
+- The personal Chrome profile is never attached.
+- Public pages only are collected.
+- robots.txt is checked before each page.
+- Do not sign in to banking websites through the automated profile.
+
+LOCAL OUTPUT
+- data\campaigns.db: text snapshots and analysis history
+- data\chrome-profile: isolated browser cookies/cache
+- screenshots: visual evidence
+- reports: JSON reports
+
+TROUBLESHOOTING
+- Chrome launch error: install/update Google Chrome, close old automated Chrome processes, retry.
+- Profile locked: stop Market Signal and close its automated Chrome window/process, then retry.
+- Reset browser identity/CDN state: stop Market Signal, delete data\chrome-profile, rerun setup_windows.bat.
+- Port 8501 busy: close the older Market Signal command window.
+- API error: check NAVY_API_KEY, NAVY_BASE_URL and NAVY_MODEL in .env.
+- Page count below slider: the slider is a maximum, not a required target; the crawler follows only relevant same-domain links allowed by robots.txt.
+
+SECURITY
+- Never share .env.
+- Never collect authenticated or private banking pages.
+- Use only public URLs approved for the proof of concept.
+- Review internal governance, website terms and robots.txt before production deployment.
+
+ARCHITECTURE NOTE
+- Streamlit only displays controls and results. It does not perform or limit browser research.
+- LangGraph decides which discovered links to inspect.
+- Installed Chrome renders pages and saves screenshots.
+- The final multimodal synthesis receives all collected page text plus all screenshots.
+- Reflex would change the interface but would not fix missing links, page text, screenshots, or model evidence.
+
+PERSISTENT AGENT BROWSER
+- One installed-Chrome context remains open for the complete bank run.
+- The agent can navigate, click visible links/buttons/tabs/accordions, scroll, go back, inspect controls, and run a readiness audit.
+- Cookies and interactive page state survive between tool calls during the run and in data\chrome-profile between runs.
+- Close old automated Chrome processes if data\chrome-profile reports that it is locked.

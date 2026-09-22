@@ -1,15 +1,32 @@
+# Secrets and local environments
 .env
-.env.*
+*.env
 !.env.example
-.streamlit/secrets.toml
 .venv/
+venv/
+
+# Generated/local research data (share manually when intended)
+data/
+
+# Python caches and test/tool caches
 __pycache__/
-*.pyc
-data/*.db
-data/chrome-profile/
-reports/*.json
-reports/*.md
-screenshots/*
-agent_error.log
-last_agent_final.txt
-*.before_persistent.py
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime output
+*.log
+streamlit*.out
+streamlit*.err
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+~*

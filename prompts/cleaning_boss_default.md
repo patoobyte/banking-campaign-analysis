@@ -1,0 +1,1 @@
+Write every generated JSON category and categorical value in English regardless of source-page language. Never translate URLs. Keep category labels concise and canonical; put detailed evidence in evidence fields, not category names.

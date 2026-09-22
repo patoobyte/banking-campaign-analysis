@@ -1,0 +1,240 @@
+I wanna rework everything the scoben is wrong my team did not explain themselfe well so we had a 2 hour meeting and i've been dumped ton of work and i'm sick and tired but the deadline is friday so i really wanna get this done in a simple way and modifying it would take too long and troubleshoot, let's just restart from scratch with a better scope we still can recycle some stuff like camoufox to scrap because google can't get to baripas and revolut etc....but the process will change a lot, rather than having a run analysis page with everything my team want our app to build a dataset for them to analyse 
+
+so our run analysis should not do all the job it should be a last thing before run analaysis
+
+we should have a cleaning of dataset(or datasetbuilder) page to clean the dataset which is cleaning the sitemaps so first we gather the side maps in every languages we already have working code right now that does that and have filter per languages...then when it have every url it'll start the cleaning process for the selected bank by exemple ING how do we clean the dataset first we'll clean it using code like reggex like "about us " in the url or "about-us" or "a propos" for french and other list of regex thought i think that it's "a-propos"  and other words like legals legal etc to get rid of page that are useless and don't even need to be crapped so we can reduce the load to scrap then when it's done the code cleaning of the url then we scrap it all the url present we already have working scrapping code that we can recycle into our rework it'll scrap every  text of those pages and htlm and then attach it to the url basically, then The ai will go throught them to clean article by exemple insurance is a product there is bike insurance, home insurance but there is also random article in the site map in the insurance that speak about theft, about rule for liquid money and sometime like what happen with storm etc for insurance no real product but more like general article or new articles that nobody really read at least not customer even business customer don't read those, the goal is cleaning the rest of the dataset of url that just random article with no real campain by exemple ""C:\Aithing\MyownCoddedthing\AGPT CODEX\Becode\ING\IGNgithub\banking-campaign-analysis-codebook\prompts\campaign_codebook.md" that have not even one of those criteria or don't have price or offering, or special offer, or forever offer like opening an account is evergreen because it's a forever offer you can always open an account etc.... and after that we have a clean and saved dataset in multible languages so that later if we run analysis on the dataset we can make it focus only on the french, english or flemish etc...the goal is to gather data after all to do data analysis on their communication and campain and visual identity(screenshot, optional that part.) but that is not for the datasebuilder the dataset builder is to clean,categorise and get rid of article and also if it decide it's not an article then it must fill up the target audiance attacher to the url data table/json "
+scan for target audiance and writte which url is for which target audiance below 18, youth (to check 18-25) adult, senior, professional
+"by exemple ## Target Audience & Product Aim Overview
+ING and BNP Paribas Fortis (traditional banks) focus on capturing customers early with free, evolving account packages to secure lifetime loyalty. In contrast, Revolut (a digital-first neobank) emphasizes cross-border flexibility, app automation, and direct financial independence.
+------------------------------
+## 👶 Below 18 (Children & Teens)
+The primary product aim for this group is supervised financial education. All accounts strictly prevent overdrafts and give parents tracking tools and spending limits.
+
+* ING
+* Target Age: 8 to 17 years old.
+   * Product Aim: The ING Go to 18 free checking account. Mobile app access is allowed from age 10, and Apple Pay integration is unlocked at age 13.
+   * Target Link: [ING Go to 18 Account](https://www.ing.be/en/individuals/current-accounts-packs/youth-account) [1]
+* BNP Paribas Fortis
+* Target Age: 0 to 18 years old.
+   * Product Aim: The Welcome Pack is a 100% free solution. Minors get a debit card and web access from age 7, upgrading to the Easy Banking App at age 12.
+   * Target Link: [BNP Paribas Fortis Welcome Pack](https://www.bnpparibasfortis.be/en/public/individuals/daily-banking/accounts/current-account/youth-account) [2]
+* Revolut
+* Target Age: 6 to 17 years old.
+   * Product Aim: Revolut <18. This account is linked directly to a parent's profile. It gamifies finance with chores to earn allowances, offers custom cards, and allows instant peer-to-peer transfers for teens aged 13–14+.
+   * Target Link: [Revolut <18 Hub](https://www.revolut.com/fr-BE/revolut-kids-and-teens-benefits/) [3]
+
+------------------------------
+## 🎓 Youth & Young Adults (18 to 25/28)
+This bracket targets students and young professionals. Products focus on complete cost transparency (mostly free accounts) while introducing basic credit lines or introductory investment options.
+
+* ING
+* Target Age: 18+ (ING minor accounts auto-convert at age 18).
+   * Product Aim: Seamless transition to the ING Do Basic package, designed as a digital-first, low-to-no fee account for day-to-day online banking.
+   * Target Link: [ING Daily Banking](https://www.ing.be/en/individuals/daily-banking)
+* BNP Paribas Fortis
+* Target Age: 18 to 28 years old.
+   * Product Aim: The Hello4You account. It offers a free current account and debit card, paired with a free credit card for the first year to support student travel and study-abroad expenses.
+   * Target Link: [BNP Paribas Fortis Hello4You](https://www.bnpparibasfortis.be/en/public/individuals/daily-banking/accounts/current-account/hello4you) [4]
+* Revolut
+* Target Age: 18+ years old.
+   * Product Aim: The Standard Tier. This free account attracts students with instant group bill-splitting, analytics, multi-currency pockets, and low-cost international transfers.
+   * Target Link: [Revolut Personal Account](https://www.revolut.com/en-AU/legal/personal-target-market-determination/)
+
+------------------------------
+## 💼 Adults & Professionals
+Banks branch their strategies here into family/lifestyle solutions (Retail) and cash flow/invoicing optimization (Business).
+
+* ING
+* Adult Aim: Focuses on milestones like mortgages, insurance policies, and joint accounts via the ING Do More package.
+   * Professional Aim: Catering to freelancers and SMEs with payment terminals, business loans, and accounting software plugins.
+   * Target Links:
+   * Retail: [ING Current Accounts](https://www.ing.be/en/individuals/current-accounts-packs)
+      * Business: [ING Business Banking](https://www.ing.be/en/business)
+   * BNP Paribas Fortis
+* Adult Aim: Tiered paid structures. The Easy Go account covers the basics, while Easy Guide adds full access to physical branch advisors.
+   * Professional Aim: Entrepreneurs and corporations looking for scaling options, leasing structures, and commercial credit.
+   * Target Links:
+   * Retail: [BNP Paribas Fortis Current Accounts](https://www.bnpparibasfortis.be/en/public/individuals/daily-banking/accounts/current-account-compare)
+      * Business: BNP Paribas Fortis Business
+   * Revolut
+* Adult Aim: Upselling users to paid subscription models (Plus, Premium, Metal, Ultra). These offer travel insurance, lounge access, investment access (stocks/crypto), and high cashback.
+   * Professional Aim: Revolut Business allows multi-currency management, physical corporate cards for employees, and streamlined online payment gateways.
+   * Target Links:
+   * Retail: [Revolut Premium Plans](https://help.revolut.com/en-FR/help/profile-and-plan/revolut-junior/)
+      * Business: [Revolut Business](https://www.revolut.com/business/)
+   
+------------------------------
+## 👵 Seniors (Wealth & Accessibility)
+While digital tools overlap with the adult category, the marketing pivot leans heavily toward wealth management, preservation, and support.
+
+* ING & BNP Paribas Fortis
+* Product Aim: Traditional banks direct seniors to their dedicated Private Banking and asset planning wings. BNP Paribas Fortis deliberately includes branch-heavy options like Easy Guide to prevent the digital exclusion of older generations.
+   * Target Links:
+   * BNP Paribas Fortis Private Banking [5]
+      * ING Private Banking [6]
+   * Revolut
+* Product Aim: Revolut does not offer a specific "Senior" package; older demographics are integrated into the main adult tier. The platform appeals to tech-savvy retirees through high-yield savings accounts and immediate security controls (like instant card freezing).
+   * Target Link: Revolut Savings
+
+------------------------------
+## 📊 Audience and Account Summary
+
+| Bank | Below 18 👶 | Youth (18–25) 🎓 | Adults & Seniors 💼👵 | Professional 👔 |
+|---|---|---|---|---|
+| ING | ING Go to 18 [1] | ING Do Basic | ING Do More / Private Banking [6] | ING Business |
+| BNP Paribas Fortis | Welcome Pack [2] | Hello4You [4] | Easy Go / Easy Guide / Private Banking [5] | Entrepreneurs Bank |
+| Revolut | Revolut <18 [3] | Standard Tier | Paid Subscription Plans (Premium, Metal) | Revolut Business |
+
+Would you like me to map out a pricing breakdown comparing the monthly costs of these plans, or should we look at the specific overseas transaction fees for each bank?
+
+" it should help you map target audiance, and then we reach the final dataset for a bank A clean filtered version with target categories audiance and no article that is our database that will always stay exept if i press rebuild the database then it'll make a back up of the old database in case if i wanna restore it making a backup in a zip file if it's big or something, and then from there let's imagine i did ING database now i go to the run analysis page and choose ING and should see the dataset loaded and it'll go throught it with a different prompt this prompt probably or the goal of it is to find all the campain and give them those feature "C:\Aithing\MyownCoddedthing\AGPT CODEX\Becode\ING\IGNgithub\Rework\features_list_v01.md" it'll do in two step first the step 1 do the simple feature list for each urls then it'll build the final output of one url the compain feature list the step 2 "## Part 2 — Feature definitions, selection types, and allowed values
+
+### Metadata
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Bank | Bank associated with the campaign. | Supplied metadata; exact reproduction | Project's internal bank classification; examples: `ING`, `BNP Paribas Fortis`, `Belfius`, `KBC`. No missing value. |
+| Source URL | Exact webpage URL from which the screenshot was captured. | Supplied metadata; URL string | Exact captured URL. Do not reconstruct, shorten, or guess it. |
+| Capture date | Date on which the communication was observed. | Supplied metadata; date | `YYYY-MM-DD`. No missing value. |
+| Language | Language used in the captured communication. | Supplied metadata; single value | Suggested values: `English`, `French`, `Dutch`, `German`. No missing value. |
+| Channel | Platform or environment in which the communication appeared. | Supplied metadata; single value | Current project: `Website` only. No missing value. |
+| Communication format | Dominant role performed by the captured page. | Model-classified; single select | `Homepage`, `Product page`, `Promotional page`, `Other`, `Not observable`. |
+| Timing | Strongest explicit temporal context of the campaign. | Model-classified; single select | `Event-based`, `Seasonal`, `Other limited-time promotion`, `Evergreen`, `Not observable`. |
+| Product family | Main financial product promoted by the campaign. | Model-classified; single select | `Current`, `Pack`, `Card`, `Savings`, `Pension`, `Insurance`, `Loan`, `Other`, `Not observable`. |
+| Target audience | Evidence-based description of the person or group expected to respond. | Model-generated; free text | Short audience description; optionally distinguish primary and supported secondary audiences. Missing value: `Not identifiable`. |
+| Campaign objective | Main behavioral or communication goal, primarily based on the dominant CTA and proposition. | Model-classified; single select | `Acquisition`, `Upselling`, `Product usage`, `Retention`, `Awareness`, `Other`, `Not observable`. |
+| Incentive type | Additional promotional reason to act beyond normal permanent product features. | Model-classified; multi-select | `Cash`, `Discount`, `Waived fee`, `Gift`, `Competition`, `Enhanced feature`, `None`, `Other`, `Not observable`. `None` and `Not observable` cannot be combined with another value. |
+| Incentive value | Exact visible monetary or material value attached to each incentive. | Model-extracted; one value per selected incentive type | Exact amount and currency, percentage, fee reduction, duration, stated retail value, or non-monetary benefit. Missing values: `Not found`, `Not applicable`, `Not observable`. |
+| Validity period | Exact period during which the campaign can be acted on or its incentive applies. | Model-extracted; one or more labelled dates or durations | Preserve visible date, deadline, event period, or duration wording; use `YYYY-MM-DD` only when the full date is visible. Missing values: `Not found`, `Not applicable`, `Not observable`. |
+| Associated season/event | Explicit cultural, commercial, academic, or institutional context. | Model-classified and extracted; one normalized category plus visible wording | Possible normalized categories: `Christmas`, `New Year`, `Valentine's Day`, `Easter`, `Summer`, `Halloween`, `Back to school/rentrée`, `Black Friday`, `Holiday travel`, `Named university event`, `Named sporting event`, `Named music festival`, `Bank anniversary`, `Other`, `None`, `Not observable`. The normalized list is extensible when no existing category fits. |
+| Viewport dimensions | Browser viewport used for the capture, before scrolling. | Supplied technical metadata; dimensions | `width × height` in pixels, for example `1440 × 900`. No missing value. |
+| Signature color | Bank's supplied signature colour, used for palette comparison. | Supplied metadata; colour value | Exact supplied colour value. No missing value. |
+
+### Communication
+
+#### Tone
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Formality | Degree to which the wording is conversational or institutionally formal. | Model-classified; single select | `Informal`, `Balanced`, `Formal`, `Not observable`. |
+| Warmth | Degree of friendliness, empathy, and human closeness in the message. | Model-classified; single select | `Low`, `Medium`, `High`, `Not observable`. |
+| Humor | Presence and prominence of jokes, playfulness, or comic wording. | Model-classified; single select | `Absent`, `Subtle`, `Prominent`, `Not observable`. |
+| Emotional valence | Overall emotional direction of the campaign message. | Model-classified; single select | `Negative`, `Neutral`, `Positive`, `Mixed`, `Not observable`. |
+
+#### Grammatical person
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Grammatical person | Dominant grammatical perspective used in the campaign copy. | Model-classified; single select | `First person`, `Second person`, `Third person`, `Mixed`, `Impersonal`, `Not observable`. |
+
+#### Message framing
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Dominant appeal | Whether the proposition primarily relies on practical reasons, feelings, or both. | Model-classified; single select | `Functional`, `Emotional`, `Mixed`, `Not observable`. |
+| Benefit focus | Main beneficiary or focus of the explicit benefits. | Model-classified; single select | `Product`, `Customer`, `Societal`, `Mixed`, `No explicit benefit`, `Not observable`. |
+| Concrete support | Amount of specific proof or factual detail supporting the proposition. | Model-classified; single select | `None`, `Limited`, `Substantial`, `Not observable`. |
+| Core message specificity | Precision with which the central proposition identifies the product, audience, benefit, conditions, or action. | Model-classified; single select | `Generic`, `Moderately specific`, `Highly specific`, `Not observable`. |
+
+#### Quantitative text metrics
+
+All quantitative text metrics use cleaned, visible **full-page campaign content** and consistently exclude navigation, cookie banners, footers, standard legal disclosures, hidden text, and duplicate sticky content.
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Word count | Total words in retained campaign content. | Automatically calculated | Non-negative integer. |
+| Heading count | Valid campaign or product headings. | Automatically calculated | Non-negative integer. |
+| Paragraph count | Retained normalized paragraph blocks. | Automatically calculated | Non-negative integer. |
+| List count | Distinct retained bulleted, numbered, checklist, or semantic lists. | Automatically calculated | Non-negative integer. |
+| List item count | Total individual items across retained lists. | Automatically calculated | Non-negative integer. |
+| Average list length | Mean number of items per retained list. | Automatically calculated | Numeric value, rounded consistently; `Not applicable` when no lists are identified. |
+| Sentence count | Sentences in retained paragraphs and bullet items. | Automatically calculated | Non-negative integer. |
+| Average paragraph length | Mean words per retained paragraph, excluding bullets and headings. | Automatically calculated | Numeric value, rounded consistently; `Not applicable` when no paragraphs are retained. |
+| Average sentence length | Mean words per retained sentence. | Automatically calculated | Numeric value, rounded consistently; `Not applicable` when no complete sentences are identified. |
+| Primary headline length | Words in the cleaned main campaign heading. | Automatically calculated | Non-negative integer; `Not found` when no primary campaign heading is identified. |
+| Text volume *(optional)* | Ordinal category derived from total word count. | Automatically derived; single value | `1` = 0–150, `2` = 151–300, `3` = 301–600, `4` = 601–1,000, `5` = more than 1,000 words. Thresholds are provisional. |
+| Paragraph length category *(optional)* | Category derived from average paragraph length. | Automatically derived; single select | `Concise` (≤15 words), `Balanced` (16–35), `Detailed` (>35), `Not applicable` (no paragraphs). |
+
+The quantitative feature family also permits `Extraction failed` when calculation cannot be completed.
+
+#### Language
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Readability | Overall ease or difficulty of reading the campaign copy. | Model-classified; single select | `Simple`, `Moderate`, `Complex`, `Not observable`. |
+| Financial jargon | Extent of specialized financial terminology. | Model-classified; single select | `None`, `Limited`, `Extensive`, `Not observable`. |
+| Sentence style | General compactness or density of sentence construction. | Model-classified; single select | `Concise`, `Balanced`, `Dense`, `Not observable`. |
+| Imperatives | Whether the campaign uses command or action-oriented verb forms. | Model-classified; single select | `Present`, `Absent`, `Not observable`. |
+| Questions | Whether questions appear in the analyzed campaign copy. | Model-classified; single select | `Present`, `Absent`, `Not observable`. |
+| Metaphors (figurative language) | Whether figurative or metaphorical wording appears. | Model-classified; single select | `Present`, `Absent`, `Not observable`. |
+| Emojis | Whether emoji characters appear in the analyzed content. | Model-classified; single select | `Present`, `Absent`, `Not observable`. |
+
+#### Persuasion
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| CTA action level | Degree of commitment requested by the primary campaign CTA. | Model-classified; single select | `Informational`, `Exploratory`, `Transactional`, `Transactional with incentive`, `No CTA`, `Not observable`. |
+| Urgency | Strength of time pressure or encouragement to act promptly. | Model-classified; single select | `Absent`, `Moderate`, `Strong`, `Not observable`. |
+| Scarcity | Whether limited availability, quantity, or access is communicated. | Model-classified; single select | `Absent`, `Present`, `Not observable`. |
+| Trust | Whether any explicit trust-building approach is present. | Derived; single select | `Present` when one or more trust-building approaches are selected; `Absent` for `None observed`; otherwise `Not observable`. |
+| Personalization | Degree to which the message is adapted to a broad audience, segment, or individual. | Model-classified; single select | `Generic`, `Audience-specific`, `Individualized`, `Not observable`. |
+| Trust-building approach | Explicit mechanism used to create confidence in the proposition. | Model-classified; multi-select | `Security and control`, `Expertise`, `Institutional credibility`, `Guarantees and reassurance`, `Customer evidence`, `None observed`, `Not observable`. `None observed` and `Not observable` cannot be combined with another value. |
+
+#### Storytelling
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Storytelling | Degree to which the campaign uses a narrative, character, sequence, or situation rather than only presenting information. | Model-classified; single select | `Absent`, `Light`, `Strong`, `Not observable`. |
+
+#### Visual communication
+
+| Feature | Short description | Selection or output type | Allowed values / format |
+|---|---|---|---|
+| Human imagery | Presence and grouping of people in meaningful campaign imagery. | Model-classified; single select | `Absent`, `Individual`, `Group`, `Mixed`, `Not observable`. |
+| Product imagery | Presence and form of the promoted product in campaign imagery. | Model-classified; single select | `Absent`, `Physical product`, `Digital interface`, `Mixed`, `Not observable`. |
+| Imagery style | Dominant role or style of meaningful campaign imagery. | Model-classified; single select | `Functional`, `Lifestyle`, `Symbolic/abstract`, `Mixed`, `No imagery`, `Not observable`. |
+| Visual text density | How text-heavy the page appears visually. | Model-classified; single select | `Low`, `Medium`, `High`, `Not observable`. |
+| Content section count | Number of top-level visual sections organizing the campaign page. | Model-extracted visual metric | Non-negative integer; `Not observable` when the complete layout cannot be assessed. |
+| Text-image layout patterns | Substantial arrangements used to combine text and imagery. | Model-classified; multi-select | `Side-by-side`, `Alternating`, `Stacked`, `Grid/cards`, `Text overlay`, `Full-width visual`, `No imagery`, `Other`, `Not observable`. `No imagery` and `Not observable` cannot be combined with another value. |
+| Visual complexity | Competition among visual elements and clarity of the page hierarchy. | Model-classified; single select | `Low`, `Medium`, `High`, `Not observable`. |
+| Brand prominence | Visual centrality of explicit bank identity, excluding colour as evidence. | Model-classified; single select | `Low`, `Medium`, `High`, `Not observable`. |
+| Colour palette relationship | Relationship between deliberate campaign colours and the supplied bank signature colour. | Model-classified; single select | `Signature-led`, `Signature-supported`, `Alternative-led`, `Neutral-led`, `Multicolour`, `Not observable`. |
+| Offer prominence | Visual importance of the main product or temporary promotion. | Model-classified; single select | `Absent`, `Low`, `Medium`, `High`, `Not observable`. |
+| CTA visual prominence | How strongly the primary campaign CTA stands out through size, contrast, placement, repetition, or persistence. | Model-classified; single select | `No CTA`, `Low`, `Medium`, `High`, `Not observable`. |
+" it's all from the files btw, but yeah step 2 is basically 2 big categoris Metadata & Communication and at the end when it finished it all the url each campain get it's own data no summaries of all the campain, we are buildet a dataset to analyse after all, so imagine we got 300 url or something there should be ton and ton and ton of campain  but yeah after the analysis we will get 300 campain with all the feature made in a way so that it's easy for us to make graph and stuff about it so you start with a json well done so the data is safe and unbiased in order and so we would have a campain-ing01.json with all of the 300 campain for ing and their target anduance url etc that's our final output it won't affect our cleaned dataset of url and htlm/text the goal is that we can modify the prompt and feature and play arround without having to reclean the dataset every time and just have to clean the dataset and 4000 thousant url once per bank, and the campain-ing01.json should be stored if i make another run then it should just be campain-ing02.json in case if we want old version for our data analysis and the main page could now just be an over views of the dataset  of compain in a pretty table and maybe an generate graph button that ask the AI to generate graph with python and store it in a graph folder the  AI just seing the campain json selected, multible campain from multible bank can be selected and loaded into the ai context to inspire us and make also comparaison graph between different data, it's just that to build this dataset it's oto mucm anual work so we need AI and it's part of the pre requis as some stuff can't be guess by code like target audiance.
+
+Also since i'm sick i ncase if i forget something here is also my messy notes "Categorise url by the audience for helping comparing commmunication between young(below18), youth (18-25 to double check), adult, senior, (professional) 
+scrapp about us, a propos de nous page
+or well forbid/exclude
+
+maybe ban also faq from url and keyword that are in the image and not in product or offer
+articles
+faq
+legal
+about us
+(propos de nous)
+report
+contact us
+Imad L.M — 15:26
+Who we are ( ing) 
+a propos (ing ) 
+actus (ing) 
+also reggex url / after by exemple in "https://www.ing.be/en/individuals/insurance/insure-my-home" we don't want url nested in this like "https://www.ing.be/en/individuals/insurance/insure-my-home/home-insurance-storm-damage" those are useless for us but before is the product and do the same for other insurance and kind of product with ton of / to help clean the list of url
+Imad L.M — 15:42
+"is there something to obtain"
+so first blacklist and filter the sitemap with reggex then scrap them and use llm to clean the list of url again using a prompt that look to get rid of article and random thing like speaking about the rule of liquide assurance to only keep price product, promotion thing affecting the user and that can be obtained and is relevant for them any kind of customer be it indiviudal, professional
+then after that
+but maybe after it reread again the final saved list to keep in database to reuse for the analysis
+scan for target audiance and writte which url is for which target audiance below 18, youth (to check 18-25) adult, senior, professional
+and that should give the final stored dataset for the analysis it's a step that should not be repeated and preciously stored
+add a page just for that clearing and building a dataset per bank that is stored and kept and also can be exported
+Imad L.M — 16:05
+most important part was Communication and Campain based on the campain notebook
+and still keep a product parsing to help do quick product comparaison but still don't take the product away from the campain pages
+and for the youth,adult etc categories still keep it in memory in the sense of compain all have targe audiance and since we are doing a communication comparaison knowing which campain target what kind of audiance is important for comparing the banks
+keep this categorical approach for the audiance for each bank
+Sooyoung — 16:07
+/faq/    FAQ pages    Help and support pages    1,569
+/article/    Editorial/news pieces    Editorial articles / general financial education    1,297
+
+Those 2 alone should take off almost 3k links/url of each bank.) Sooyoung, imad, Anna D are just name because i took note on discord.

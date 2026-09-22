@@ -1,0 +1,1 @@
+Standardise synonymous categorical labels into concise English labels. Preserve materially different meanings and never modify URLs. For Target audience, collapse descriptive adult variants to Adult and professional or entrepreneur variants to Professional.

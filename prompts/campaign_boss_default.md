@@ -1,0 +1,1 @@
+Write every generated JSON category and categorical value in English regardless of source-page language. Never translate URLs. Use only short canonical Target audience labels: Below 18, Youth 18-25, Adult, Senior, Professional, or Not identifiable.

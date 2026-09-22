@@ -43,7 +43,7 @@ def cleaning_record_has_error(record):
 def count_cleaning_errors(clean):
     return sum(cleaning_record_has_error(record) for record in (clean or {}).get('records',[]))
 
-def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=None, concurrent_calls=5, request_spacing=1.0, custom_instruction="", retry_failed=False):
+def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=None, concurrent_calls=5, request_spacing=0.3, custom_instruction="", retry_failed=False):
     configure_ai_pacing(request_spacing)
     old=load_clean(bank)
     backup=str(backup_clean(bank)) if (rebuild or retry_failed) and old else None
@@ -71,22 +71,23 @@ def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=N
             decision=by_url.get(page['url'],{'eligible':False,'exclusion_reason':'AI response missing URL','audience_categories':['Not identifiable'],'confidence':'Low','ai_error':True})
             output.append({**{k:page.get(k) for k in ['url','language','last_modified','captured_at','status','html_file','text_file','text_chars','structure']},**decision})
         return output
-    # Submit only one bounded wave at a time. This starts requests immediately without queuing all 318 futures.
-    workers=min(max(1,concurrent_calls),50,len(batches))
+    # Rolling pool: up to `workers` calls remain active. A completed call
+    # immediately frees a slot; there is no slowest-request wave barrier.
+    # json_call staggers the actual HTTP starts by request_spacing.
+    workers=min(max(1,int(concurrent_calls)),50,len(batches))
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        for offset in range(0,len(batches),workers):
-            wave=batches[offset:offset+workers]; futures={pool.submit(process,b):b for b in wave}
-            for future in as_completed(futures):
-                try: records.extend(future.result())
-                except Exception as exc:
-                    failed_batches+=1
-                    batch=futures[future]
-                    for page in batch:
-                        records.append({**{k:page.get(k) for k in ['url','language','last_modified','captured_at','status','html_file','text_file','text_chars','structure']},'eligible':False,'exclusion_reason':f'AI batch failed: {type(exc).__name__}: {exc}','audience_categories':['Not identifiable'],'confidence':'Low','ai_error':True})
-                completed+=1
-                partial={'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'building','completed_batches':completed,'total_batches':len(batches),'failed_batches':failed_batches,'records':records}
-                clean_path(bank).write_text(json.dumps(partial,ensure_ascii=False,indent=2),encoding='utf8')
-                if progress: progress(f'AI batches complete {completed:,}/{len(batches):,} ? pages saved {len(records):,} ? failed batches {failed_batches:,}')
+        futures={pool.submit(process,batch):batch for batch in batches}
+        for future in as_completed(futures):
+            try: records.extend(future.result())
+            except Exception as exc:
+                failed_batches+=1
+                batch=futures[future]
+                for page in batch:
+                    records.append({**{k:page.get(k) for k in ['url','language','last_modified','captured_at','status','html_file','text_file','text_chars','structure']},'eligible':False,'exclusion_reason':f'AI batch failed: {type(exc).__name__}: {exc}','audience_categories':['Not identifiable'],'confidence':'Low','ai_error':True})
+            completed+=1
+            partial={'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'building','completed_batches':completed,'total_batches':len(batches),'failed_batches':failed_batches,'records':records}
+            clean_path(bank).write_text(json.dumps(partial,ensure_ascii=False,indent=2),encoding='utf8')
+            if progress: progress(f'AI batches complete {completed:,}/{len(batches):,} - pages saved {len(records):,} - failed batches {failed_batches:,}')
     # Collapse by URL defensively and calculate failure state from the resulting dataset.
     by_url={record['url']:record for record in records if record.get('url')}
     final_records=sorted(by_url.values(),key=lambda x:x['url'])
@@ -109,7 +110,7 @@ def estimate_campaign_tokens(bank, languages):
     chars=sum(len(pages.get(r['url'],{}).get('text','')[:70000])+len(definitions) for r in chosen)
     return {'pages':len(chosen),'estimated_input_tokens':(chars+3)//4,'estimated_output_tokens':len(chosen)*1800,'estimated_total_tokens':(chars+3)//4+len(chosen)*1800}
 
-def run_campaign_coding(bank, languages, progress=None, concurrent_calls=35, request_spacing=1.0, resume_path=None, custom_instruction=""):
+def run_campaign_coding(bank, languages, progress=None, concurrent_calls=35, request_spacing=0.3, resume_path=None, custom_instruction=""):
     clean=load_clean(bank)
     if not clean or clean.get('status') not in ('complete','complete_with_failures'): raise RuntimeError('Build the clean dataset first.')
     chosen=[r for r in clean['records'] if r.get('eligible') and (not languages or r.get('language') in languages)]
@@ -132,16 +133,16 @@ def run_campaign_coding(bank, languages, progress=None, concurrent_calls=35, req
         return {'source_url':row['url'],'features':classify_campaign(bank,page,definitions,custom_instruction)}
     completed=len(output['records']); failed=0; workers=min(max(1,int(concurrent_calls)),50,max(1,len(chosen)))
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        # Bounded waves preserve one-page-per-call while respecting the chosen concurrency/RPM ceiling.
-        for offset in range(0,len(chosen),workers):
-            wave=chosen[offset:offset+workers]; futures={pool.submit(process,row):row for row in wave}
-            for future in as_completed(futures):
-                row=futures[future]
-                try: output['records'].append(future.result())
-                except Exception as exc: failed+=1; output['records'].append({'source_url':row['url'],'error':f'{type(exc).__name__}: {exc}'})
-                completed+=1; output['completed_pages']=completed; output['failed_pages']=failed
-                path.write_text(json.dumps(output,ensure_ascii=False,indent=2),encoding='utf8')
-                if progress: progress(f"Campaign pages coded {completed:,}/{output.get('total_pages',len(chosen)):,} - successful {completed-failed:,} - failed {failed:,}")
+        # Rolling pool: each completed call immediately frees a slot for the
+        # next page. HTTP starts remain staggered by request_spacing.
+        futures={pool.submit(process,row):row for row in chosen}
+        for future in as_completed(futures):
+            row=futures[future]
+            try: output['records'].append(future.result())
+            except Exception as exc: failed+=1; output['records'].append({'source_url':row['url'],'error':f'{type(exc).__name__}: {exc}'})
+            completed+=1; output['completed_pages']=completed; output['failed_pages']=failed
+            path.write_text(json.dumps(output,ensure_ascii=False,indent=2),encoding='utf8')
+            if progress: progress(f"Campaign pages coded {completed:,}/{output.get('total_pages',len(chosen)):,} - successful {completed-failed:,} - failed {failed:,}")
     deduped={r.get('source_url'):r for r in output['records'] if r.get('source_url')}; output['records']=list(deduped.values())
     output['failed_pages']=sum(bool(r.get('error')) for r in output['records']); output['completed_pages']=len(output['records'])
     output['status']='complete_with_failures' if output['failed_pages'] else 'complete'; path.write_text(json.dumps(output,ensure_ascii=False,indent=2),encoding='utf8'); return path,output

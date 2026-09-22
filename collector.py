@@ -152,6 +152,7 @@ def deterministic_filter(rows: list[dict], selected_languages: list[str], bank: 
         reason=None; path=urlparse(row['url']).path.lower()
         if not row.get('robots_allowed', True): reason='robots_disallowed'
         elif selected and row.get('language') not in selected: reason='language_out_of_scope'
+        elif bank=='Revolut' and re.match(r'^/[a-z]{2}-[a-z]{2}(?:/|$)',path) and not re.match(r'^/(?:en|fr|nl)-be(?:/|$)',path): reason='market_out_of_scope'
         elif pattern and pattern.search(path): reason='banned_url_term'
         elif any(_is_descendant(row['url'],root) for root in roots): reason='descendant_of_banned_root'
         target=dict(row, deterministic_status='rejected' if reason else 'kept', deterministic_reason=reason)
@@ -181,8 +182,65 @@ def _ing_pagemodel_url(html: str):
         if 'api.www.ing.be/' in href and '/pagemodel?' in href: return href
     return None
 
+async def scrape_rendered_pages(bank: str, rows: list[dict], progress=None, cancel_event=None) -> dict:
+    """Collect protection-sensitive sites through one real, visible Camoufox page."""
+    from playwright.async_api import async_playwright
+    from camoufox.async_api import AsyncNewBrowser
+    cancel_event=cancel_event or threading.Event()
+    folder=bank_dir(RAW,bank); html_dir=folder/'html'; text_dir=folder/'text'; html_dir.mkdir(exist_ok=True); text_dir.mkdir(exist_ok=True)
+    index_path=folder/'index.json'; progress_path=folder/'progress.json'; index=_load_json_object_resilient(index_path)
+    # Recover deterministic text files before deciding what remains.
+    for row in rows:
+        key=hashlib.sha256(row['url'].encode()).hexdigest(); tp=text_dir/f'{key}.txt'; hp=html_dir/f'{key}.html'
+        if tp.exists() and tp.stat().st_size>0:
+            entry=index.setdefault(row['url'],dict(row)); entry['text_file']=str(tp.relative_to(folder)); entry['text_chars']=tp.stat().st_size
+            if hp.exists(): entry['html_file']=str(hp.relative_to(folder))
+    pending=[row for row in rows if not index.get(row['url'],{}).get('text_file')]
+    reused=len(rows)-len(pending); done=success=failed=retries=0
+    def checkpoint(state='running',message=''):
+        _atomic_json_write(progress_path,{'state':state,'mode':'visible_rendered_camoufox','message':message,'total':len(rows),'pending_at_start':len(pending),'reused':reused,'completed':done,'completed_this_run':done,'completed_total':reused+done,'successful_text_pages':success,'successful_this_run':success,'successful_total':reused+success,'failed':failed,'retry_attempts':retries,'remaining':max(0,len(pending)-done),'workers':1,'updated_at':datetime.now(timezone.utc).isoformat()})
+    checkpoint(message='Opening one visible Camoufox browser. Revolut pages are rendered sequentially; images and scripts remain enabled.')
+    async with async_playwright() as pw:
+        browser=await AsyncNewBrowser(pw,headless=False,geoip=False,humanize=True)
+        context=await browser.new_context(locale='en-BE',timezone_id='Europe/Brussels',viewport={'width':1440,'height':1000})
+        page=await context.new_page()
+        try:
+            for row in pending:
+                if cancel_event.is_set(): break
+                started=time.time(); entry=dict(row); captured=False
+                checkpoint(message=f"Visible Camoufox is rendering {row['url']}. If a challenge appears, complete it in the browser window.")
+                for attempt in range(3):
+                    if cancel_event.is_set(): break
+                    try:
+                        response=await page.goto(row['url'],wait_until='domcontentloaded',timeout=90000)
+                        await page.wait_for_timeout(5000 if attempt==0 else 12000)
+                        status=response.status if response else 0; html=await page.content(); title=await page.title()
+                        body_text=await page.locator('body').inner_text(timeout=15000)
+                        protection=status in (403,429) or any(token in (title+' '+body_text[:1000]).lower() for token in ('access denied','verify you are human','just a moment','captcha'))
+                        if protection:
+                            retries+=1; checkpoint('challenge',f'Revolut protection page detected. The visible browser will wait 30 seconds for manual completion before retry {attempt+2}/3.')
+                            await page.wait_for_timeout(30000); continue
+                        text,structure=clean_visible_html(html)
+                        if len(text)<200 and len(body_text)>len(text): text=body_text
+                        if status==200 and text.strip():
+                            key=hashlib.sha256(row['url'].encode()).hexdigest(); hp=html_dir/f'{key}.html'; tp=text_dir/f'{key}.txt'
+                            hp.write_text(html,encoding='utf8'); tp.write_text(text,encoding='utf8')
+                            entry.update({'status':status,'title':title,'collector_mode':'visible_rendered_camoufox','html_file':str(hp.relative_to(folder)),'text_file':str(tp.relative_to(folder)),'captured_at':datetime.now(timezone.utc).isoformat(),'text_chars':len(text),'structure':structure,'elapsed_seconds':round(time.time()-started,2),'attempts':attempt+1})
+                            entry.pop('error',None); success+=1; captured=True; break
+                    except Exception as exc:
+                        retries+=1; entry['error']=f'{type(exc).__name__}: {exc}'
+                        if attempt<2: await page.wait_for_timeout(10000)
+                if not captured:
+                    failed+=1; entry.update({'status':entry.get('status',0),'captured_at':datetime.now(timezone.utc).isoformat(),'collector_mode':'visible_rendered_camoufox','error':entry.get('error','Rendered page did not produce usable text after 3 attempts.')})
+                index[row['url']]=entry; done+=1; _atomic_json_write(index_path,index); checkpoint()
+        finally:
+            await context.close(); await browser.close()
+    state='cancelled' if cancel_event.is_set() else ('complete_with_failures' if failed else 'complete'); checkpoint(state)
+    return {'total':len(rows),'new':len(pending),'reused':reused,'successful_text_pages':success,'failed':failed,'retry_attempts':retries,'cancelled':cancel_event.is_set(),'index_path':str(index_path),'mode':'visible_rendered_camoufox'}
+
 async def scrape_pages(bank: str, rows: list[dict], workers=10, progress=None, cancel_event=None) -> dict:
     """Resumable, paced bulk collection with retries and shared cooldowns for every bank."""
+    if bank=='Revolut': return await scrape_rendered_pages(bank,rows,progress,cancel_event)
     from playwright.async_api import async_playwright
     from camoufox.async_api import AsyncNewBrowser
     cancel_event=cancel_event or threading.Event()

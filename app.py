@@ -39,9 +39,15 @@ elif page=='Dataset builder':
     st.caption(f"Active AI model: {provider_settings()['model']}")
     st.caption('Pipeline: recursive sitemaps → deterministic URL exclusions → Camoufox scrape → AI eligibility and audience coding. Campaign feature coding is separate.')
     bank=st.selectbox('Bank',list(BANKS)); languages=st.multiselect('Languages',list(LANGUAGES),default=['French','Dutch / Flemish','English']); selected=[LANGUAGES[x] for x in languages]
-    workers=st.slider("Camoufox workers",1,20,10,help="Uses the prototype's 10-worker pattern with request starts paced about 0.7 seconds apart. Rough full-bank runtime is 40-45 minutes; temporary blocks trigger shared cooldown and retries."); batch_size=st.slider('AI cleaning batch size',1,20,8)
+    if bank=='Revolut':
+        workers=1
+        st.number_input('Camoufox workers (fixed for Revolut)',value=1,disabled=True,help='Revolut protection rejects HTTP-style concurrent downloads. This bank uses one persistent visible rendered browser.')
+        st.info('Revolut protection mode: Belgium locales only (en-BE, fr-BE, nl-BE), rendered sequentially in one visible humanized Camoufox browser with scripts and images enabled. Keep its browser window open; complete a challenge manually if one appears.')
+    else:
+        workers=st.slider("Camoufox workers",1,20,10,help="Concurrent request-context workers for ING and BNP. Temporary blocks trigger shared cooldown and retries.")
+    batch_size=st.slider('AI cleaning batch size',1,20,8)
     clean_instruction=st.text_area('Optional cleaning instruction override',value=read_prompt('cleaning_boss_default.md'),height=110,help='Added after prompts/dataset_cleaning_system.md. Edit that prompt file for permanent team-wide rules; this box is a run-specific addition.')
-    ai_calls=st.slider('Simultaneous AI API calls',1,50,35); ai_spacing=st.slider('Seconds between new AI request starts',0.0,5.0,1.0,0.1,help='Global start interval across all workers. 1 second means at most 60 new request starts per minute; retries use additional exponential backoff.')
+    ai_calls=st.slider('Simultaneous AI API calls',1,50,35); ai_spacing=st.slider('Seconds between new AI request starts',0.0,5.0,0.3,0.1,help='Delay between request starts, not a one-at-a-time mode. Calls overlap up to the selected concurrency. 0.3 seconds starts about 3.3 calls/second while completed calls continuously free worker slots; retries back off automatically.')
     settings=load_filter_settings(bank)
     st.subheader('Bank-specific URL cleaning rules')
     st.caption('One literal URL term per line. Matches complete URL path segments separated by /, - or _. These rules run before scraping and AI.')
@@ -60,6 +66,7 @@ elif page=='Dataset builder':
     if inventory:
         kept,rejected=deterministic_filter(inventory['rows'],selected,bank,settings)
         a,b,c,d=st.columns(4); a.metric('Sitemap URLs',len(inventory['rows'])); b.metric('After code filter',len(kept)); c.metric('Code rejected',len(rejected)); d.metric('Languages',len(selected))
+        if bank=='Revolut': st.caption('Only Belgian market routes are retained. Other country routes such as en-AR and en-AU are reported as market_out_of_scope in the URL decisions table.')
         with st.expander('Review deterministic URL decisions'):
             st.dataframe(pd.DataFrame(kept+rejected),use_container_width=True,height=350,hide_index=True)
             st.download_button('Download URL decisions',json.dumps(kept+rejected,ensure_ascii=False,indent=2),f'{bank}-url-decisions.json','application/json')
@@ -135,7 +142,7 @@ elif page=='Run campaign coding':
     bank=st.selectbox('Bank',list(BANKS)); languages=st.multiselect('Language scope',list(LANGUAGES),default=['French','Dutch / Flemish','English']); selected=[LANGUAGES[x] for x in languages]
     st.caption(f"Active AI model: {provider_settings()['model']}")
     campaign_instruction=st.text_area('Optional campaign-coding instruction override',value=read_prompt('campaign_boss_default.md'),height=110,help='Added after prompts/campaign_coding_system.md. Edit the prompt file for permanent team-wide rules; this box applies only to this run.')
-    campaign_calls=st.slider('Simultaneous campaign AI calls',1,50,35,help='Each page is one independent call.'); campaign_spacing=st.slider('Seconds between new campaign request starts',0.0,5.0,1.0,0.1,help='Global pacing across workers. Use at least 1 second for a 60 RPM ceiling. Rate limits and timeouts retry automatically with backoff.')
+    campaign_calls=st.slider('Simultaneous campaign AI calls',1,50,35,help='Each page is one independent call.'); campaign_spacing=st.slider('Seconds between new campaign request starts',0.0,5.0,0.3,0.1,help='Delay between starts while calls overlap up to the selected concurrency. This prevents a 35-call burst without forcing calls to finish one by one. Retries use automatic backoff.')
     clean=load_clean(bank); eligible=[x for x in (clean or {}).get('records',[]) if x.get('eligible') and (not selected or x.get('language') in selected)]
     st.metric('Eligible pages to code',len(eligible))
     campaign_estimate=estimate_campaign_tokens(bank,selected) if eligible else {'estimated_total_tokens':0}

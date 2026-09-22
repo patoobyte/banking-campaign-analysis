@@ -36,6 +36,8 @@ This project is part of an ING challenge at Becode-data science and AI bootcamp.
 In this project, only campaigns on the webpage of each banks were investigated. To have a wider analysis, we would need to include social media campaigns, and campaigns available on the mobile applications of banks. 
 Additionally, to have a complete overview of the campaign success we would need to combine our data with internal data of the banks. This would allow us to identify features that make a campaign impactful. 
 
+From a technical aspect, the technical pipeline is not running on a schedule. Moving forward we would recommend to automatically run it once a month during low season, and once a week during high season to capture the most releavent news and stay up to date. 
+
 
 ## ⌛Timeline 
 

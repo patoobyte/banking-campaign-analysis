@@ -6,7 +6,7 @@ from config import BANKS, LANGUAGES, RUNS
 from collector import gather_sitemaps, load_inventory, deterministic_filter, run_scrape_pages, load_filter_settings, save_filter_settings, load_raw_records, is_scrape_running, request_scrape_stop, audit_and_deduplicate_raw
 from ai import provider_settings, read_prompt
 from analysis_workspace import run_label, load_runs, feature_names, unique_values, filter_records, chat_answer, mass_replace, suggest_normalisation, available_languages
-from datasets import load_clean, build_clean_dataset, estimate_cleaning_tokens, backups, restore_backup, run_campaign_coding, estimate_campaign_tokens, list_runs
+from datasets import load_clean, build_clean_dataset, estimate_cleaning_tokens, backups, restore_backup, run_campaign_coding, estimate_campaign_tokens, list_runs, count_cleaning_errors
 
 st.set_page_config(page_title='Campaign Dataset Builder',page_icon='DB',layout='wide')
 st.markdown('''<style>
@@ -107,8 +107,20 @@ elif page=='Dataset builder':
                 with status.expander('Technical traceback'): st.code(traceback.format_exc())
     clean=load_clean(bank)
     if clean:
-        st.subheader('Permanent clean dataset'); records=clean.get('records',[]); eligible=[x for x in records if x.get('eligible')]
-        a,b,c=st.columns(3); a.metric('Reviewed',len(records)); b.metric('Eligible',len(eligible)); c.metric('Excluded by AI',len(records)-len(eligible))
+        st.subheader('Permanent clean dataset'); records=clean.get('records',[]); eligible=[x for x in records if x.get('eligible')]; clean_errors=count_cleaning_errors(clean)
+        a,b,c,d=st.columns(4); a.metric('Reviewed',len(records)); b.metric('Eligible',len(eligible)); c.metric('Excluded by AI',len(records)-len(eligible)-clean_errors); d.metric('AI errors to retry',clean_errors)
+        if clean_errors:
+            st.warning(f'{clean_errors:,} pages contain an AI error. Successful reviews will be preserved; retry processes only these failed pages and creates a ZIP backup first.')
+            if st.button(f'Retry {clean_errors:,} failed AI-cleaning pages',type='primary',use_container_width=True):
+                retry_status=st.status(f'Retrying {clean_errors:,} failed cleaning pages...',expanded=True); retry_line=retry_status.empty()
+                try:
+                    repaired=build_clean_dataset(bank,kept,batch_size,False,retry_line.write,ai_calls,ai_spacing,clean_instruction,retry_failed=True)
+                    remaining=count_cleaning_errors(repaired); recovered=clean_errors-remaining
+                    retry_status.update(label=f'Retry complete: {recovered:,} recovered; {remaining:,} errors remain.',state='complete' if not remaining else 'error',expanded=True)
+                    st.rerun()
+                except Exception as exc:
+                    retry_status.update(label='Cleaning retry failed',state='error',expanded=True); retry_line.error(f'{type(exc).__name__}: {exc!r}')
+                    with retry_status.expander('Technical traceback'): st.code(traceback.format_exc())
         st.dataframe(pd.DataFrame(records),use_container_width=True,height=420,hide_index=True)
         st.download_button('Export clean dataset JSON',json.dumps(clean,ensure_ascii=False,indent=2),f'{bank}-clean-dataset.json','application/json')
     saved=backups(bank)

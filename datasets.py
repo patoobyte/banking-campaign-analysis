@@ -36,18 +36,31 @@ def estimate_cleaning_tokens(bank, kept_rows, batch_size=8):
     output_tokens=len(pages)*180
     return {'pages':len(pages),'text_characters':chars,'estimated_input_tokens':input_tokens,'estimated_output_tokens':output_tokens,'estimated_total_tokens':input_tokens+output_tokens,'batches':(len(pages)+batch_size-1)//batch_size}
 
-def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=None, concurrent_calls=5, request_spacing=1.0, custom_instruction=""):
+def cleaning_record_has_error(record):
+    reason=str(record.get('exclusion_reason') or '')
+    return bool(record.get('ai_error') or record.get('error') or reason.startswith('AI batch failed:') or reason=='AI response missing URL')
+
+def count_cleaning_errors(clean):
+    return sum(cleaning_record_has_error(record) for record in (clean or {}).get('records',[]))
+
+def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=None, concurrent_calls=5, request_spacing=1.0, custom_instruction="", retry_failed=False):
     configure_ai_pacing(request_spacing)
     old=load_clean(bank)
-    backup=str(backup_clean(bank)) if rebuild and old else None
+    backup=str(backup_clean(bank)) if (rebuild or retry_failed) and old else None
     raw=load_raw_records(bank,{r['url'] for r in kept_rows}); previous={r['url']:r for r in (old or {}).get('records',[])} if not rebuild else {}
     records=[]; pending=[]
     for page in raw:
-        if page['url'] in previous: records.append(previous[page['url']])
-        elif page.get('text'): pending.append(page)
+        existing=previous.get(page['url'])
+        if existing and not (retry_failed and cleaning_record_has_error(existing)):
+            records.append(existing)
+        elif page.get('text'):
+            pending.append(page)
     batches=[pending[i:i+batch_size] for i in range(0,len(pending),batch_size)]
     if not batches:
-        return {'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'complete','backup_created':backup,'records':sorted(records,key=lambda x:x['url'])}
+        remaining_errors=sum(cleaning_record_has_error(record) for record in records)
+        final={'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'complete_with_failures' if remaining_errors else 'complete','backup_created':backup,'failed_records':remaining_errors,'records':sorted(records,key=lambda x:x['url'])}
+        clean_path(bank).write_text(json.dumps(final,ensure_ascii=False,indent=2),encoding='utf8')
+        return final
     if progress: progress('Checking provider connectivity before starting AI batches...')
     probe=provider_preflight()
     if progress: progress(f"Provider {probe['model']} connected in {probe['seconds']}s. Starting {len(batches):,} batches with {min(concurrent_calls,len(batches))} concurrent calls...")
@@ -55,7 +68,7 @@ def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=N
     def process(batch):
         classified=classify_cleaning_batch(bank,batch,custom_instruction); by_url={x.get('url'):x for x in classified}; output=[]
         for page in batch:
-            decision=by_url.get(page['url'],{'eligible':False,'exclusion_reason':'AI response missing URL','audience_categories':['Not identifiable'],'confidence':'Low'})
+            decision=by_url.get(page['url'],{'eligible':False,'exclusion_reason':'AI response missing URL','audience_categories':['Not identifiable'],'confidence':'Low','ai_error':True})
             output.append({**{k:page.get(k) for k in ['url','language','last_modified','captured_at','status','html_file','text_file','text_chars','structure']},**decision})
         return output
     # Submit only one bounded wave at a time. This starts requests immediately without queuing all 318 futures.
@@ -74,7 +87,11 @@ def build_clean_dataset(bank, kept_rows, batch_size=8, rebuild=False, progress=N
                 partial={'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'building','completed_batches':completed,'total_batches':len(batches),'failed_batches':failed_batches,'records':records}
                 clean_path(bank).write_text(json.dumps(partial,ensure_ascii=False,indent=2),encoding='utf8')
                 if progress: progress(f'AI batches complete {completed:,}/{len(batches):,} ? pages saved {len(records):,} ? failed batches {failed_batches:,}')
-    final={'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'complete_with_failures' if failed_batches else 'complete','backup_created':backup,'failed_batches':failed_batches,'records':sorted(records,key=lambda x:x['url'])}
+    # Collapse by URL defensively and calculate failure state from the resulting dataset.
+    by_url={record['url']:record for record in records if record.get('url')}
+    final_records=sorted(by_url.values(),key=lambda x:x['url'])
+    remaining_errors=sum(cleaning_record_has_error(record) for record in final_records)
+    final={'bank':bank,'created_at':datetime.now(timezone.utc).isoformat(),'status':'complete_with_failures' if remaining_errors else 'complete','backup_created':backup,'failed_batches':failed_batches,'failed_records':remaining_errors,'records':final_records}
     clean_path(bank).write_text(json.dumps(final,ensure_ascii=False,indent=2),encoding='utf8'); return final
 
 def backups(bank): return sorted(bank_dir(BACKUPS,bank).glob('*.zip'),reverse=True)

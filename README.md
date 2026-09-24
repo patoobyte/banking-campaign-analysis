@@ -87,3 +87,26 @@ The Overview, campaign runner, normalisation workspace, and Chat & graphs worksp
 ## Repository safety
 
 `.gitignore` excludes `.env`, virtual environments, Python caches, logs, temporary files, and all generated `data/`. `.env.example`, application code, prompt files, setup scripts, and documentation remain shareable.
+
+## Presentation demo scope
+
+Four isolated `DEMO` workspaces use curated URL lists from `Filteredurl/` and write only under `data/demo/`:
+
+1. **DEMO - Dataset builder** captures rendered text, full-page screenshots, DOM counts, and screenshot metrics. No sitemap or eligibility model is used.
+2. **DEMO - Campaign run** uses `prompts/demo_campaign_features.md` and codes each already-curated page independently using screenshot plus text evidence and the standardized 16-dimension 1-5 communication framework.
+3. **DEMO - Overview** compares either individual campaigns or whole-bank averages. Communication uses a common-scale radar; deterministic counts and visual metrics use bar/box charts.
+4. **DEMO - AI chatbot** answers from selected demo records only.
+
+Demo banks are BNP Paribas Fortis, ING, and N26. The large proof-of-concept workspaces remain available unchanged below the demo navigation. Curated URL lists are editable and persisted locally in `data/demo/urls.json`.
+
+Screenshots are source evidence for visual-first pages. Deterministic code?not the model?counts text, words, sentences, headings, images, visible images, links, buttons, screenshot dimensions, brightness, contrast, warmth, and colourfulness.
+
+## Team quantitative HTML metrics
+
+The presentation dataset stores three separate evidence blocks per campaign:
+
+- `deterministic_metrics`: rendered-page and screenshot measurements produced by the demo collector.
+- `quantitative_html_metrics`: fields adapted from the team's `extract_quantitative_data.py`, preserving its spreadsheet names and counts.
+- `visual_assessment`: AI judgments based on the screenshot, including visible paragraph density, paragraph-size disparity, typography hierarchy, whitespace balance, and scanability.
+
+The numerical HTML extractor and screenshot AI assessment deliberately coexist. HTML paragraph counts and average lengths do not necessarily describe how paragraph disparity looks after CSS/layout rendering. Use **Refresh quantitative HTML metrics from cached pages** after the team's regex/parser module is revised; no recapture or AI rerun is required merely to recompute those numerical fields. The external Downloads script is not modified by this app.

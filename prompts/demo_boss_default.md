@@ -1,0 +1,1 @@
+Use concise canonical English labels. Keep every communication score as an integer from 1 to 5 or null. Keep justification and evidence quotation in separate fields. Treat screenshot content as source evidence and do not guess when text or visual evidence is insufficient.

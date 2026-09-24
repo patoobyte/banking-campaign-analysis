@@ -7,6 +7,7 @@ from collector import gather_sitemaps, load_inventory, deterministic_filter, run
 from ai import provider_settings, read_prompt
 from analysis_workspace import run_label, load_runs, feature_names, unique_values, filter_records, chat_answer, mass_replace, suggest_normalisation, available_languages
 from datasets import load_clean, build_clean_dataset, estimate_cleaning_tokens, backups, restore_backup, run_campaign_coding, estimate_campaign_tokens, list_runs, count_cleaning_errors
+from demo_ui import render_demo_builder, render_demo_run, render_demo_overview, render_demo_chat
 
 st.set_page_config(page_title='Campaign Dataset Builder',page_icon='DB',layout='wide')
 st.markdown('''<style>
@@ -18,9 +19,17 @@ st.markdown('''<style>
 with st.sidebar:
     st.title('DATASET BUILDER')
     st.caption('Bank campaign communication research')
-    page=st.radio('Workspace',['Overview','Dataset builder','Run campaign coding','Dataset normalisation','Chat & graphs'])
+    page=st.radio('Workspace',['DEMO - Dataset builder','DEMO - Campaign run','DEMO - Overview','DEMO - AI chatbot','Overview','Dataset builder','Run campaign coding','Dataset normalisation','Chat & graphs'])
 
-if page=='Overview':
+if page=='DEMO - Dataset builder':
+    render_demo_builder()
+elif page=='DEMO - Campaign run':
+    render_demo_run()
+elif page=='DEMO - Overview':
+    render_demo_overview()
+elif page=='DEMO - AI chatbot':
+    render_demo_chat()
+elif page=='Overview':
     st.markdown('<div class="hero"><h1>Campaign Dataset Builder</h1><p class="muted">Collect once. Clean once. Recode campaigns into versioned analytical datasets.</p></div>',unsafe_allow_html=True)
     cols=st.columns(3)
     for col,bank in zip(cols,BANKS):

@@ -163,9 +163,15 @@ def render_demo_run():
         combined_json_col.download_button('Download all banks JSON',combined_payload,'demo-campaigns-all-banks.json','application/json',use_container_width=True)
         combined_csv_col.download_button('Download all banks CSV',combined_csv,'demo-campaigns-all-banks.csv','text/csv',use_container_width=True)
 
+def _overview_chart_label(side, name, bank=None):
+    """Use identifiable names on the chart without overflowing its legend."""
+    if bank:
+        name=f"{DEMO_BANKS[bank]['code']}: {name}"
+    return f"{side}: {name[:31] + '...' if len(name)>34 else name}"
+
 def render_demo_overview():
     st.title('Overview demo')
-    st.caption('Compare one campaign, several campaigns, or whole-bank averages. Communication radar axes all share the same 1-5 scale; page metrics use separate charts.')
+    st.caption('Compare individual campaigns or whole banks. Communication scores use a 1-5 radar; categorical labels show presence or bank prevalence; numeric metrics use separate scales.')
     records=[r for r in _records() if r.get('communication_scores')]
     if not records: st.info('Capture and code demo campaigns first.'); return
     mode=st.radio('Comparison level',['Individual campaigns','Whole banks'],horizontal=True)
@@ -173,13 +179,13 @@ def render_demo_overview():
         options={_campaign_label(r):r for r in records}; left,right=st.columns(2)
         a=left.selectbox('Left campaign',list(options),index=0)
         b=right.selectbox('Right campaign',list(options),index=min(1,len(options)-1))
-        selections=[('Left',[options[a]]),('Right',[options[b]])]
+        selections=[(_overview_chart_label('Left',options[a].get('campaign',{}).get('name') or options[a]['campaign_id'],options[a]['bank']),[options[a]]),(_overview_chart_label('Right',options[b].get('campaign',{}).get('name') or options[b]['campaign_id'],options[b]['bank']),[options[b]])]
         st.caption(f'Orange = Left: {a}   |   Green = Right: {b}')
     else:
         banks=sorted({r['bank'] for r in records}); left,right=st.columns(2)
         a=left.selectbox('Left bank',banks,index=0)
         b=right.selectbox('Right bank',banks,index=min(1,len(banks)-1))
-        selections=[('Left',[r for r in records if r['bank']==a]),('Right',[r for r in records if r['bank']==b])]
+        selections=[(_overview_chart_label('Left',a),[r for r in records if r['bank']==a]),(_overview_chart_label('Right',b),[r for r in records if r['bank']==b])]
         st.caption(f'Orange = Left: {a} ({len(selections[0][1])} campaigns)   |   Green = Right: {b} ({len(selections[1][1])} campaigns)')
     if a==b: st.info('Choose different selections for a meaningful comparison.')
     profiles={label:comparison_profile(group) for label,group in selections}
@@ -202,8 +208,9 @@ def render_demo_overview():
     st.subheader('Categorical comparisons')
     category_options=list(VISUAL_CATEGORIES)+['overall_communication_profile','dominant_characteristics','evidence_quality_rating']
     category_field=st.selectbox('Classification to compare',category_options,index=category_options.index('evidence_quality_rating'),format_func=lambda value:value.replace('_',' ').capitalize())
-    graph_rows=[]; contributing=set()
+    graph_rows=[]; contributing=set(); eligible={}
     for selection,group in selections:
+        eligible[selection]=0
         for record in group:
             if category_field!='evidence_quality_rating' and record.get('visual_schema_version')!=VISUAL_SCHEMA_VERSION:
                 continue
@@ -219,6 +226,7 @@ def render_demo_overview():
             else:
                 label=valid_label((record.get('evidence_quality') or {}).get('rating'),('High','Medium','Low'))
                 labels=[label] if label else []
+            if labels: eligible[selection]+=1
             for label in labels: graph_rows.append({'Selection':selection,'Category':label})
             if labels: contributing.add((selection,record.get('source_url') or record.get('campaign_id')))
     if graph_rows:
@@ -226,9 +234,10 @@ def render_demo_overview():
         counts=counts.reindex(columns=[label for label,_ in selections],fill_value=0)
         top_categories=counts.sum(axis=1).sort_values(ascending=False).head(10).index
         plotted=[row for row in graph_rows if row['Category'] in top_categories]
-        category_path=category_chart(plotted,selections)
+        category_path=category_chart(plotted,selections,mode=mode,eligible=eligible)
         st.image(str(category_path),width=760)
-        st.caption(f'{len(contributing)} selected campaign(s) with graphable categories. Up to 10 most frequent labels shown; each dominant-characteristics tag contributes once. Legacy prose and missing values are excluded.')
+        interpretation='Yes/No indicates label presence; these are not 1-5 scores.' if mode=='Individual campaigns' else 'Bars show the percentage of eligible coded campaigns within each selected bank (0-100%), not 1-5 scores.'
+        st.caption(f'{interpretation} {len(contributing)} selected campaign(s) have graphable categories. Up to 10 most frequent labels shown; legacy prose and missing values excluded.')
         with st.expander('All category counts'):
             st.dataframe(counts,use_container_width=True)
     else: st.info('No graphable categories yet for these campaigns. Recode their cached screenshots in DEMO - Campaign run.')

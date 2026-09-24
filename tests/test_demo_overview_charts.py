@@ -3,6 +3,7 @@ import unittest
 
 import matplotlib.pyplot as plt
 
+from demo_ui import _overview_chart_label
 from demo_backend import (
     COMMUNICATION_DIMENSIONS, box_metrics_figure, category_figure,
     metrics_figure, radar_figure, _numeric_values,
@@ -32,6 +33,18 @@ class OverviewChartTests(unittest.TestCase):
         self.assertLess(fig.get_figwidth(), 9)
         self.assertEqual([text.get_text() for text in fig.legends[0].get_texts()], ['Left', 'Right'])
 
+    def test_selected_names_are_used_in_radar_and_metric_charts(self):
+        named = [('Left: BNP accounts', [self.left]), ('Right: N26 plans', [self.right])]
+        radar = radar_figure(named)
+        self.assertEqual([text.get_text() for text in radar.legends[0].get_texts()],
+                         [label for label, _ in named])
+        numeric = metrics_figure(named, ['text_characters'])
+        self.assertEqual([tick.get_text() for tick in numeric.axes[0].get_yticklabels()],
+                         [label for label, _ in named])
+        distribution = box_metrics_figure(named, ['text_characters'])
+        self.assertEqual([tick.get_text() for tick in distribution.axes[0].get_yticklabels()],
+                         [f'{label} (n=1)' for label, _ in named])
+
     def test_numeric_bars_use_separate_axes_and_distinct_colours(self):
         fig = metrics_figure(self.selections, ['text_characters', 'visible_image_count'])
         self.assertEqual(len(fig.axes), 2)
@@ -56,15 +69,42 @@ class OverviewChartTests(unittest.TestCase):
         self.assertEqual(len(axis.patches), 2)
         self.assertNotEqual(axis.patches[0].get_facecolor(), axis.patches[1].get_facecolor())
 
-    def test_category_counts_distinguish_same_bank_campaigns(self):
+    def test_individual_categories_are_presence_not_numeric_scores(self):
+        named = [('Left: BNP account', [self.left]), ('Right: N26 plans', [self.right])]
         fig = category_figure([
-            {'Selection': 'Left', 'Category': 'High'},
-            {'Selection': 'Right', 'Category': 'Low'},
-        ], self.selections)
+            {'Selection': named[0][0], 'Category': 'High'},
+            {'Selection': named[1][0], 'Category': 'Low'},
+        ], named)
         axis = fig.axes[0]
-        self.assertEqual(len(axis.patches), 4)
-        self.assertEqual(len(fig.legends[0].get_texts()), 2)
+        self.assertEqual(len(axis.collections), 4)  # two campaigns x two labels
+        self.assertEqual(len(axis.patches), 0)  # no misleading 0-1 bars
+        self.assertEqual([text.get_text() for text in fig.legends[0].get_texts()],
+                         [label for label, _ in named])
+        self.assertEqual([text.get_text() for text in axis.get_xticklabels()], ['Left', 'Right'])
         self.assertLess(fig.get_figwidth(), 9)
+
+    def test_bank_categories_show_prevalence_not_raw_counts(self):
+        left = [self.left, dict(self.left, campaign_id='second')]
+        right = [self.right, dict(self.right, campaign_id='fourth')]
+        named = [('Left: BNP Paribas Fortis', left), ('Right: N26', right)]
+        fig = category_figure([
+            {'Selection': named[0][0], 'Category': 'High'},
+            {'Selection': named[1][0], 'Category': 'High'},
+            {'Selection': named[1][0], 'Category': 'High'},
+        ], named, mode='Whole banks', eligible={named[0][0]: 2, named[1][0]: 2})
+        axis = fig.axes[0]
+        self.assertEqual(sorted(round(bar.get_width()) for bar in axis.patches), [50, 100])
+        self.assertEqual([text.get_text() for text in fig.legends[0].get_texts()],
+                         [label for label, _ in named])
+        self.assertEqual(axis.get_xlim()[0], 0)
+        self.assertIn('100%', [text.get_text() for text in axis.get_xticklabels()])
+
+    def test_chart_labels_identify_selections_and_truncate_long_campaigns(self):
+        label = _overview_chart_label('Left', 'Compare your accounts', 'BNP Paribas Fortis')
+        self.assertIn('BNP:', label)
+        self.assertIn('Compare your accounts', label)
+        self.assertEqual(_overview_chart_label('Right', 'N26'), 'Right: N26')
+        self.assertLessEqual(len(_overview_chart_label('Left', 'A' * 100)), 43)
 
     def test_missing_metric_is_not_counted_as_zero(self):
         record = {'deterministic_metrics': {'visible_image_count': 0}}

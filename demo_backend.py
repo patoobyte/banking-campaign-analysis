@@ -393,7 +393,7 @@ def radar_figure(selections):
     ax.set_yticklabels(['1','2','3','4','5'],color=_DEMO_CHART_TEXT,fontsize=8)
     ax.set_rlabel_position(0)
     fig.subplots_adjust(left=.21,right=.79,top=.83,bottom=.13)
-    fig.legend(loc='upper center',bbox_to_anchor=(.5,.97),ncol=2,frameon=False,labelcolor=_DEMO_CHART_TEXT,fontsize=10)
+    fig.legend(loc='upper center',bbox_to_anchor=(.5,.99),ncol=2,frameon=False,labelcolor=_DEMO_CHART_TEXT,fontsize=8)
     return fig
 
 
@@ -448,32 +448,58 @@ def box_metrics_figure(selections,metrics):
     return _comparison_figure(selections,metrics,box=True)
 
 
-def category_figure(graph_rows,selections):
-    """Counts per comparison selection, not per bank (two campaigns may share a bank)."""
+def category_figure(graph_rows,selections,*,mode='Individual campaigns',eligible=None):
+    """Categories are nominal, not 1-5 scores: show presence or bank prevalence."""
     from collections import Counter
+    from matplotlib.lines import Line2D
     categories=sorted({row['Category'] for row in graph_rows})
     if not categories: raise ValueError('No categories to chart')
     fig,ax=plt.subplots(figsize=(8.2,min(5.6,max(2.7,1.0+.47*len(categories)))))
     _style_chart(fig,ax)
-    positions=np.arange(len(categories)); width=.35
+    positions=np.arange(len(categories))
     counts=Counter((row['Selection'],row['Category']) for row in graph_rows)
-    for i,(label,_) in enumerate(selections):
-        if i>=2: break
-        values=[counts[(label,category)] for category in categories]
-        bars=ax.barh(positions+(i-.5)*width,values,height=width*.92,
-                     color=_DEMO_CHART_COLORS[i],label=label,alpha=.9)
-        for bar,value in zip(bars,values):
-            if value: ax.text(value+.04,bar.get_y()+bar.get_height()/2,str(value),
-                              va='center',fontsize=9,color=_DEMO_CHART_TEXT)
+    if mode=='Individual campaigns':
+        # A single page either has a tag or does not; a 0-1 count axis
+        # misleadingly resembles the 1-5 communication score scale.
+        ax.grid(False)
+        for i,(label,_) in enumerate(selections[:2]):
+            for y,category in enumerate(categories):
+                present=counts[(label,category)]>0
+                ax.scatter(i,y,s=145 if present else 70,marker='o',zorder=3,
+                           facecolors=_DEMO_CHART_COLORS[i] if present else 'none',
+                           edgecolors=_DEMO_CHART_COLORS[i],linewidths=1.6,alpha=.95)
+                ax.annotate('Yes' if present else 'No',(i,y),xytext=(13,0),
+                            textcoords='offset points',va='center',color=_DEMO_CHART_TEXT,fontsize=9)
+        ax.set_xticks([0,1],['Left','Right'],color=_DEMO_CHART_TEXT)
+        ax.set_xlim(-.55,1.7)
+        ax.set_xlabel('Label present in selected campaign',color=_DEMO_CHART_TEXT,fontsize=9)
+        handles=[Line2D([0],[0],marker='o',linestyle='none',color=color,label=label,markersize=8)
+                 for (label,_),color in zip(selections[:2],_DEMO_CHART_COLORS)]
+    elif mode=='Whole banks':
+        eligible=eligible or {}
+        width=.35
+        for i,(label,_) in enumerate(selections[:2]):
+            total=eligible.get(label,0)
+            values=[100*counts[(label,category)]/total if total else 0 for category in categories]
+            bars=ax.barh(positions+(i-.5)*width,values,height=width*.92,
+                         color=_DEMO_CHART_COLORS[i],label=label,alpha=.9)
+            for bar,value in zip(bars,values):
+                if value: ax.text(min(value+1.3,99),bar.get_y()+bar.get_height()/2,f'{value:.0f}%',
+                                  va='center',fontsize=8,color=_DEMO_CHART_TEXT)
+        ax.set_xlim(0,105)
+        ax.set_xticks([0,25,50,75,100],['0%','25%','50%','75%','100%'])
+        ax.set_xlabel('Share of eligible coded campaigns with this label',color=_DEMO_CHART_TEXT,fontsize=9)
+        handles=None
+    else:
+        plt.close(fig)
+        raise ValueError(f'Unknown comparison level: {mode}')
     ax.set_yticks(positions,categories,color=_DEMO_CHART_TEXT)
     ax.invert_yaxis()
-    ax.set_xlabel('Campaigns with this label',color=_DEMO_CHART_TEXT,fontsize=9)
-    ax.set_xlim(0,max(counts.values(),default=1)*1.22+.15)
-    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-    fig.subplots_adjust(left=.25,right=.91,top=.84,bottom=.16)
-    fig.legend(loc='upper center',bbox_to_anchor=(.5,.99),ncol=2,
-               frameon=False,labelcolor=_DEMO_CHART_TEXT,fontsize=10)
+    fig.subplots_adjust(left=.25,right=.89,top=.81,bottom=.17)
+    fig.legend(handles=handles,loc='upper center',bbox_to_anchor=(.5,.99),ncol=2,
+               frameon=False,labelcolor=_DEMO_CHART_TEXT,fontsize=8)
     return fig
+
 
 def distribution_figure(selections,dimension):
     fig,ax=plt.subplots(figsize=(9,4)); labels=[]; data=[]
@@ -566,8 +592,8 @@ def metric_chart(records,metrics,chart_type='bar',selections=None):
     return _save_demo_figure(fig,'numeric-comparison')
 
 
-def category_chart(graph_rows,selections):
-    return _save_demo_figure(category_figure(graph_rows,selections),'category-comparison')
+def category_chart(graph_rows,selections,*,mode='Individual campaigns',eligible=None):
+    return _save_demo_figure(category_figure(graph_rows,selections,mode=mode,eligible=eligible),'category-comparison')
 
 def demo_chat(messages,records,instruction=''):
     context=json.dumps(records,ensure_ascii=False,separators=(',',':')); system=read_prompt('demo_analyst_chat_system.md',{'ADDITIONAL_INSTRUCTION':instruction.strip() or 'None.','CONTEXT_JSON':context}); settings=provider_settings(); _wait_request_slot(); response=client().chat.completions.create(model=settings['model'],messages=[{'role':'system','content':system}]+messages[-20:]); return response.choices[0].message.content or ''

@@ -7,6 +7,7 @@ Every prompt is read from disk when used. Save a file and the next AI request us
 - `dataset_cleaning_system.md`: **initial AI cleaning**—decides URL/page eligibility and assigns basic target audiences.
 - `campaign_coding_system.md`: one-page-at-a-time final campaign and communication coding.
 - `campaign_features_v01.md`: feature inventory supplied with each campaign-coding request.
+- `demo_campaign_features.md`: demo feature framework with 1?5 communication positions and controlled, screenshot-based visual labels; the demo CSV separates labels from their evidence. Recode earlier campaigns to populate new label columns.
 - `analyst_chat_system.md`: analyst behavior, injected selected context, and the validated `<graphs>` directive for requesting up to three Matplotlib charts. The model never executes Python.
 - `normalisation_suggestions_system.md`: proposes reviewed exact-value normalisation rules.
 

@@ -20,26 +20,17 @@ Our aim is to see whether:
 ### b. Methodology
 For a detailed methodology, please refer to the methodology.md
 For this work we focused on three bank campaigns: ING, BNP Paribas Fortis and N26. 
+For campaign comparisons we chose the tone, visual and text communication of pages. For those, we defined a list of features to be extracted (see features_listv01). 
 
 1. We scraped URLs from the sitemap of each bank. To have more a targeted output, we banned the following terms from our URL scrape: "about us, legal, faq, news, articles, support, help, press".
 We obtained URLs in FR, EN and NL in a json format. 
-Retained ENGLISH campaigns: 
+2. Feature extraction by LLM. 
+3. Retained ENGLISH campaigns: 
 - ING: we selected the URLs that have the word "campaign", "campagne"
 - BNP: we selected the all the root URLs with a unique product 
 - N26: we could only select the homepage and the debit card plans (this bank does not communicate through their webpage)
-2. 
+4. Data analysis on tone, visual and text features. 
 
-
-We created a streamlit application for collecting banking pages, building a reusable eligible-page dataset, coding campaign communication features, normalising values, and analysing selected records with charts.
-
-Gather same-host recursive sitemap URLs and robots decisions.
-Apply language, bank-specific banned-term, and descendant-root rules.
-Cache raw HTML/content, cleaned text, and metadata with Camoufox.
-AI-review eligibility and assign canonical audiences.
-Preserve the clean page dataset independently.
-Code one eligible page per AI request into a versioned campaign JSON.
-Optionally create a normalised copy; originals remain unchanged.
-Filter one or more runs for analyst chat and deterministic charts.
 
 
 
@@ -48,9 +39,7 @@ Filter one or more runs for analyst chat and deterministic charts.
 |Tool               |       Function        |
 |-------------------|-----------------------|
 |Python             | Programming language  |
-|         |   LLM                 |
-
-|          |       |
+|                   |   LLM                 |
 |Git/github         | version control       |
 
 
@@ -61,8 +50,21 @@ Filter one or more runs for analyst chat and deterministic charts.
 
 ## 💻 Installation 
 
+1. Clone the repo to your local machine.
 
-## Main result 
+```
+git clone https://github.com/patoobyte/banking-campaign-analysis 
+cd banking-campaign-analysis
+```
+
+2. Create a virtual environment and install dependencies.
+```
+python -m venv env
+source venv/bin/activate   
+pip install -r requirements.txt
+```
+
+## 🌟 Main result 
 
 - Belgian banks communicate differently: whether we take campaigns all together, or focus on a permanent produc, or a time limited offer. 
 - Based on comparisons of ING, BNP and N26 on target audience, medium of communication with clients, tone, visuals and text, we observe that ING is a hybrid bank: 

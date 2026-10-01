@@ -18,6 +18,29 @@ Our aim is to see whether:
 - ING is closer to a traditional or a challenger bank
 
 ### b. Methodology
+For a detailed methodology, please refer to the methodology.md
+For this work we focused on three bank campaigns: ING, BNP Paribas Fortis and N26. 
+
+1. We scraped URLs from the sitemap of each bank. To have more a targeted output, we banned the following terms from our URL scrape: "about us, legal, faq, news, articles, support, help, press".
+We obtained URLs in FR, EN and NL in a json format. 
+Retained ENGLISH campaigns: 
+- ING: we selected the URLs that have the word "campaign", "campagne"
+- BNP: we selected the all the root URLs with a unique product 
+- N26: we could only select the homepage and the debit card plans (this bank does not communicate through their webpage)
+2. 
+
+
+We created a streamlit application for collecting banking pages, building a reusable eligible-page dataset, coding campaign communication features, normalising values, and analysing selected records with charts.
+
+Gather same-host recursive sitemap URLs and robots decisions.
+Apply language, bank-specific banned-term, and descendant-root rules.
+Cache raw HTML/content, cleaned text, and metadata with Camoufox.
+AI-review eligibility and assign canonical audiences.
+Preserve the clean page dataset independently.
+Code one eligible page per AI request into a versioned campaign JSON.
+Optionally create a normalised copy; originals remain unchanged.
+Filter one or more runs for analyst chat and deterministic charts.
+
 
 
 ## 🛠️ Tech stack 

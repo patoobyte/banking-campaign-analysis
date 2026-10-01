@@ -86,7 +86,7 @@ pip install -r requirements.txt
 
 ## ⌛Timeline 
 
-This project was completed in two weeks. 
+This project was completed in two weeks and presented at ING HG in Brussels (see presentation folder).
 
 ## 🔦 Credits 
 
